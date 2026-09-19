@@ -1,6 +1,7 @@
 # Mobile Manipulation & Robotics Simulation
 
 An end-to-end 2D mobile manipulation pipeline implemented in Python. The system simulates autonomous navigation, real-time perception, local control optimization, online learning, and arm manipulation to accomplish a pick-and-place task in a cluttered environment.
+<img width="1320" height="550" alt="robot_report" src="https://github.com/user-attachments/assets/11465413-9b6f-45cd-b78a-e0ef58dfd8b1" />
 
 ---
 
