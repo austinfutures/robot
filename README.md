@@ -105,6 +105,4 @@ python robot_sim.py
 ### Generated Outputs
 Upon completion, the terminal displays full mission telemetry (runtime, final heading, controller usage breakdown, ML convergence error, and arm state). It also generates **`robot_report.png`**, a 4-panel dashboard featuring:
 - **World Map**: Global $A^*$ vs. RRT paths, executed base trajectory, LiDAR hits, and robot arm configuration.
-- **Ego Camera View**: Raw camera capture from the robot's perspective.
-- **Sobel Filter Output**: Edge detection feature map.
 - **Telemetry Charts**: History of linear speed ($v$), angular velocity ($\omega$), and ML learning error curve.
