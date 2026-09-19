@@ -1,5 +1,5 @@
 """
-robot_sim.py - Headless mission + summary figure.
+robot_sim.py - Headless mission + summary figure (Telemetry & Path only).
 Run:  python robot_sim.py
 """
 import time
@@ -9,8 +9,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Rectangle
 
-from robot_core import (World, astar, rrt, lidar_scan, camera_image,
-                        sobel_edges, Robot, follow_path, mpc, OnlineLinear)
+# Removed camera_image and sobel_edges imports
+from robot_core import (World, astar, rrt, lidar_scan, Robot, 
+                        follow_path, mpc, OnlineLinear)
 
 NAV, REACH, GRASP, DONE = 0, 1, 2, 3
 
@@ -25,11 +26,11 @@ def main():
 
     print("[planning] A* ...")
     t0 = time.time(); path = astar(world, start, goal)
-    print(f"           -> {len(path)} waypoints in {time.time()-t0:.3f}s")
+    print(f"            -> {len(path)} waypoints in {time.time()-t0:.3f}s")
 
     print("[planning] RRT ...")
     t0 = time.time(); rrt_path = rrt(world, start, goal)
-    print(f"           -> {len(rrt_path) if rrt_path else 0} waypoints "
+    print(f"            -> {len(rrt_path) if rrt_path else 0} waypoints "
           f"in {time.time()-t0:.3f}s")
 
     robot = Robot(*start)
@@ -110,9 +111,6 @@ def main():
     dg = float(np.hypot(goal[0]-robot.x, goal[1]-robot.y))
     print(f"[sim] Complete in {steps} steps ({sim_time:.2f}s)")
 
-    final_cam = camera_image(world, robot.x, robot.y, robot.theta)
-    final_edges = sobel_edges(final_cam)
-
     print("\n===== TELEMETRY =====")
     print(f"  Final position   : ({robot.x:.2f}, {robot.y:.2f})")
     print(f"  Final heading    : {np.degrees(robot.theta):.1f} deg")
@@ -127,13 +125,14 @@ def main():
     print(f"  Mission status   : {'SUCCESS' if robot.has_object else 'INCOMPLETE'}")
     print(f"  Total runtime    : {time.time()-t_start:.2f}s")
 
-    # ---------------- REPORT FIGURE ----------------
-    fig, ((ax_w, ax_c), (ax_e, ax_t)) = plt.subplots(2, 2, figsize=(12, 8))
+    # ---------------- REPORT FIGURE (Path & Telemetry Only) ----------------
+    fig, (ax_w, ax_t) = plt.subplots(1, 2, figsize=(12, 5))
     fig.patch.set_facecolor('#0b0f14')
-    for ax in (ax_w, ax_c, ax_e, ax_t):
+    for ax in (ax_w, ax_t):
         ax.set_facecolor('#101418')
         for s in ax.spines.values(): s.set_color('#445566')
 
+    # --- Plot 1: World & Path ---
     ax_w.set_xlim(0, world.width); ax_w.set_ylim(0, world.height)
     ax_w.set_aspect('equal')
     ax_w.imshow(world.grid, origin='lower', cmap='Greys',
@@ -168,14 +167,22 @@ def main():
                    color='white', fontsize=10)
     ax_w.set_xticks([]); ax_w.set_yticks([])
 
-    ax_c.imshow(final_cam, cmap='gray', origin='lower', vmin=0, vmax=1)
-    ax_c.set_title("Robot-centric camera (final)", color='white', fontsize=10)
-    ax_c.set_xticks([]); ax_c.set_yticks([])
+    # --- Plot 2: Telemetry ---
+    ax_t.plot(hv, '-', color='cyan', lw=1, label='linear v')
+    ax_t.plot(hw, '-', color='magenta', lw=1, label='angular w')
+    ax_t.plot(he, '-', color='yellow', lw=1, label='ML error')
+    ax_t.set_title("Telemetry (controls + ML learning curve)",
+                   color='white', fontsize=10)
+    ax_t.set_xlabel("step", color='white', fontsize=8)
+    ax_t.tick_params(colors='white', labelsize=7)
+    ax_t.legend(fontsize=8, loc='upper right', facecolor='#0b0f14',
+                edgecolor='#445566', labelcolor='white')
 
-    ax_e.imshow(final_edges, cmap='hot', origin='lower', vmin=0, vmax=1)
-    ax_e.set_title("Sobel edges (CV)", color='white', fontsize=10)
-    ax_e.set_xticks([]); ax_e.set_yticks([])
+    plt.tight_layout()
+    plt.savefig("robot_report.png", dpi=110, facecolor='#0b0f14')
+    print("\n[saved] robot_report.png")
 
+    # --- Plot 2: Telemetry ---
     ax_t.plot(hv, '-', color='cyan', lw=1, label='linear v')
     ax_t.plot(hw, '-', color='magenta', lw=1, label='angular w')
     ax_t.plot(he, '-', color='yellow', lw=1, label='ML error')
